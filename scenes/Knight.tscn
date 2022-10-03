@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=2]
+[gd_scene load_steps=24 format=2]
 
 [ext_resource path="res://assets/knight/Colour1/Outline/120x80_PNGSheets/_Idle.png" type="Texture" id=1]
 [ext_resource path="res://assets/knight/Colour1/Outline/120x80_PNGSheets/_Attack.png" type="Texture" id=2]
@@ -9,6 +9,11 @@
 [ext_resource path="res://assets/knight/Colour1/Outline/120x80_PNGSheets/_Fall.png" type="Texture" id=7]
 [ext_resource path="res://assets/knight/Colour1/Outline/120x80_PNGSheets/_Dash.png" type="Texture" id=8]
 [ext_resource path="res://assets/knight/Colour1/Outline/120x80_PNGSheets/_Attack2.png" type="Texture" id=9]
+[ext_resource path="res://scenes/Knight.gd" type="Script" id=10]
+[ext_resource path="res://assets/knight/Colour1/Outline/120x80_PNGSheets/_Hit.png" type="Texture" id=11]
+
+[sub_resource type="RectangleShape2D" id=12]
+extents = Vector2( 7.5, 14.5 )
 
 [sub_resource type="Animation" id=3]
 resource_name = "CHARGED_ATTACK"
@@ -116,7 +121,7 @@ tracks/3/keys = {
 }
 
 [sub_resource type="Animation" id=5]
-resource_name = "DEATH"
+resource_name = "FAINT"
 tracks/0/type = "value"
 tracks/0/path = NodePath("Sprite:texture")
 tracks/0/interp = 1
@@ -218,6 +223,70 @@ tracks/3/keys = {
 "transitions": PoolRealArray( 1, 1, 1 ),
 "update": 1,
 "values": [ 0, 1, 2 ]
+}
+
+[sub_resource type="Animation" id=11]
+resource_name = "HURT"
+length = 0.2
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite:texture")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ ExtResource( 11 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("Sprite:hframes")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 1 ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("Sprite:vframes")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 1 ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("Sprite:frame")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ 0, 1 ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath("Sprite:self_modulate")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0, 0.1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Color( 1, 0, 0, 1 ), Color( 1, 1, 1, 1 ) ]
 }
 
 [sub_resource type="Animation" id=1]
@@ -326,6 +395,58 @@ tracks/3/keys = {
 "values": [ 0, 1, 2 ]
 }
 
+[sub_resource type="Animation" id=10]
+resource_name = "MOVE"
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite:texture")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ ExtResource( 4 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("Sprite:hframes")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 10 ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("Sprite:vframes")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 1 ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("Sprite:frame")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
+}
+
 [sub_resource type="Animation" id=8]
 resource_name = "QUICK_ATTACK"
 length = 0.4
@@ -392,6 +513,18 @@ tracks/0/keys = {
 "update": 0,
 "values": [ 0 ]
 }
+tracks/1/type = "value"
+tracks/1/path = NodePath("Sprite:self_modulate")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
 
 [sub_resource type="Animation" id=9]
 resource_name = "ROLL"
@@ -446,74 +579,36 @@ tracks/3/keys = {
 "values": [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 ]
 }
 
-[sub_resource type="Animation" id=10]
-resource_name = "RUN"
-loop = true
-tracks/0/type = "value"
-tracks/0/path = NodePath("Sprite:texture")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/keys = {
-"times": PoolRealArray( 0 ),
-"transitions": PoolRealArray( 1 ),
-"update": 1,
-"values": [ ExtResource( 4 ) ]
-}
-tracks/1/type = "value"
-tracks/1/path = NodePath("Sprite:hframes")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/keys = {
-"times": PoolRealArray( 0 ),
-"transitions": PoolRealArray( 1 ),
-"update": 1,
-"values": [ 10 ]
-}
-tracks/2/type = "value"
-tracks/2/path = NodePath("Sprite:vframes")
-tracks/2/interp = 1
-tracks/2/loop_wrap = true
-tracks/2/imported = false
-tracks/2/enabled = true
-tracks/2/keys = {
-"times": PoolRealArray( 0 ),
-"transitions": PoolRealArray( 1 ),
-"update": 1,
-"values": [ 1 ]
-}
-tracks/3/type = "value"
-tracks/3/path = NodePath("Sprite:frame")
-tracks/3/interp = 1
-tracks/3/loop_wrap = true
-tracks/3/imported = false
-tracks/3/enabled = true
-tracks/3/keys = {
-"times": PoolRealArray( 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9 ),
-"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ),
-"update": 1,
-"values": [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
-}
-
 [node name="Knight" type="KinematicBody2D"]
+script = ExtResource( 10 )
 
 [node name="Collision" type="CollisionShape2D" parent="."]
+position = Vector2( -0.5, 5.5 )
+shape = SubResource( 12 )
 
 [node name="Sprite" type="Sprite" parent="."]
-texture = ExtResource( 3 )
-hframes = 12
+texture = ExtResource( 1 )
+offset = Vector2( 4, -19 )
+hframes = 10
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 anims/CHARGED_ATTACK = SubResource( 3 )
 anims/DASH = SubResource( 4 )
-anims/DEATH = SubResource( 5 )
+anims/FAINT = SubResource( 5 )
 anims/FALL = SubResource( 6 )
+anims/HURT = SubResource( 11 )
 anims/IDLE = SubResource( 1 )
 anims/JUMP = SubResource( 7 )
+anims/MOVE = SubResource( 10 )
 anims/QUICK_ATTACK = SubResource( 8 )
 anims/RESET = SubResource( 2 )
 anims/ROLL = SubResource( 9 )
-anims/RUN = SubResource( 10 )
+
+[node name="HurtBox" type="Area2D" parent="."]
+
+[node name="HitBox" type="Area2D" parent="."]
+
+[node name="StaminaTimer" type="Timer" parent="."]
+
+[connection signal="animation_finished" from="AnimationPlayer" to="." method="_on_AnimationPlayer_animation_finished"]
+[connection signal="timeout" from="StaminaTimer" to="." method="_on_StaminaTimer_timeout"]
