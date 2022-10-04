@@ -1,6 +1,28 @@
-[gd_scene load_steps=2 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://scripts/Menu.gd" type="Script" id=1]
+[ext_resource path="res://assets/game_over.ttf" type="DynamicFontData" id=2]
+
+[sub_resource type="DynamicFont" id=1]
+size = 128
+outline_size = 4
+outline_color = Color( 0, 0, 0, 1 )
+font_data = ExtResource( 2 )
+
+[sub_resource type="DynamicFont" id=3]
+size = 48
+font_data = ExtResource( 2 )
+
+[sub_resource type="DynamicFont" id=4]
+size = 32
+font_data = ExtResource( 2 )
+
+[sub_resource type="DynamicFont" id=2]
+size = 48
+outline_size = 2
+outline_color = Color( 0.192157, 0.137255, 0, 1 )
+extra_spacing_char = 2
+font_data = ExtResource( 2 )
 
 [node name="Menu" type="Control"]
 anchor_right = 1.0
@@ -12,22 +34,102 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
-margin_left = 443.0
-margin_top = 281.0
-margin_right = 581.0
-margin_bottom = 319.0
+margin_left = 256.0
+margin_top = 242.0
+margin_right = 768.0
+margin_bottom = 358.0
 
 [node name="Label" type="Label" parent="CenterContainer/VBoxContainer"]
-margin_right = 138.0
-margin_bottom = 14.0
+margin_right = 512.0
+margin_bottom = 72.0
+custom_constants/shadow_offset_x = 0
+custom_fonts/font = SubResource( 1 )
 text = "Multiplayer Fight Test"
 align = 1
 valign = 1
 
 [node name="JoinBtn" type="Button" parent="CenterContainer/VBoxContainer"]
-margin_top = 18.0
-margin_right = 138.0
-margin_bottom = 38.0
+margin_top = 76.0
+margin_right = 512.0
+margin_bottom = 116.0
+rect_min_size = Vector2( 512, 40 )
 text = "Join"
 
+[node name="RoomPopup" type="Popup" parent="CenterContainer"]
+margin_left = 212.0
+margin_top = 100.0
+margin_right = 812.0
+margin_bottom = 500.0
+rect_min_size = Vector2( 600, 400 )
+
+[node name="ColorRect" type="ColorRect" parent="CenterContainer/RoomPopup"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color( 0.109804, 0.113725, 0.117647, 1 )
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/RoomPopup"]
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+margin_top = -28.0
+margin_bottom = 28.0
+rect_min_size = Vector2( 0, 100 )
+
+[node name="RoomLabel" type="Label" parent="CenterContainer/RoomPopup/VBoxContainer"]
+margin_right = 600.0
+margin_bottom = 28.0
+custom_fonts/font = SubResource( 3 )
+text = "Lobby"
+align = 1
+valign = 1
+
+[node name="Players" type="VBoxContainer" parent="CenterContainer/RoomPopup/VBoxContainer"]
+margin_top = 32.0
+margin_right = 600.0
+margin_bottom = 32.0
+
+[node name="You" type="Label" parent="CenterContainer/RoomPopup/VBoxContainer/Players"]
+visible = false
+margin_right = 600.0
+margin_bottom = 18.0
+custom_colors/font_color = Color( 1, 0.921569, 0.552941, 1 )
+custom_fonts/font = SubResource( 4 )
+text = "You"
+align = 1
+valign = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/RoomPopup/VBoxContainer"]
+margin_top = 36.0
+margin_right = 600.0
+margin_bottom = 56.0
+alignment = 1
+
+[node name="JoinRoomBtn" type="Button" parent="CenterContainer/RoomPopup/VBoxContainer/HBoxContainer"]
+margin_left = 263.0
+margin_right = 298.0
+margin_bottom = 20.0
+text = "Join"
+
+[node name="ExitBtn" type="Button" parent="CenterContainer/RoomPopup/VBoxContainer/HBoxContainer"]
+margin_left = 302.0
+margin_right = 337.0
+margin_bottom = 20.0
+text = "Exit"
+icon_align = 1
+
+[node name="Status" type="Label" parent="."]
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_top = -59.0
+custom_colors/font_color = Color( 1, 0.67451, 0, 1 )
+custom_constants/shadow_offset_x = 0
+custom_fonts/font = SubResource( 2 )
+text = "
+"
+align = 1
+valign = 1
+
 [connection signal="pressed" from="CenterContainer/VBoxContainer/JoinBtn" to="." method="_on_JoinBtn_pressed"]
+[connection signal="pressed" from="CenterContainer/RoomPopup/VBoxContainer/HBoxContainer/JoinRoomBtn" to="." method="_on_JoinRoomBtn_pressed"]
+[connection signal="pressed" from="CenterContainer/RoomPopup/VBoxContainer/HBoxContainer/ExitBtn" to="." method="_on_ExitBtn_pressed"]
