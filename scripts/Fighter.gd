@@ -24,10 +24,14 @@ export (int) var max_health = 100
 export (int) var health = 100 setget _set_health
 export (int) var max_stamina = 80
 export (int) var stamina = 80 setget _set_stamina
-var stamina_regeneration = 20
+export (int) var max_dashes = 3
+export (int) var dashes = 3 setget _set_dashes
+
+var stamina_regeneration = 8
 var basic_attack_cost = 20
 var current_state = State.IDLE
 var is_looking_left = false
+var speed_bonus = 1.0
 
 # Combo
 export (float) var timeTillNextInput = 0.2
@@ -41,6 +45,25 @@ onready var hurtBox = $HurtBox
 onready var animationPlayer = $AnimationPlayer
 onready var sprite = $Sprite
 onready var collision = $Collision
+onready var dash = $Dash
+
+# Dash
+var dash_duration = 0.1
+var can_dash = true
+
+func start_dash():
+	if is_dashing():
+		return
+	if dashes < 1:
+		return
+	_set_dashes(dashes - 1)
+	dash.wait_time = dash_duration
+	dash.start()
+	speed_bonus = 6
+	changeAnimation("DASH")
+
+func is_dashing():
+	return !dash.is_stopped()
 
 # Getters and Setters
 func health_in_percentage(value):
@@ -77,6 +100,11 @@ func _set_stamina(value):
 	elif stamina != prev_stamina:
 		emit_signal("stamina_changed", stamina_in_percentage(stamina))
 
+func _set_dashes(value):
+	var prev_dashes = dashes;
+	dashes = clamp(value, 0, max_dashes)
+	#printt('dashes', dashes)
+
 func changeAnimation(type):
 	if not animationPlayer.has_animation(type):
 		return
@@ -90,7 +118,7 @@ func isFainted():
 	return current_state == State.FAINT
 
 func canAttack():
-	return Input.is_action_just_pressed("Attack") && stamina >= basic_attack_cost
+	return Input.is_action_just_pressed("Attack") && stamina >= basic_attack_cost && is_on_floor()
 
 # Executes the right animation for the character input
 func attack(character):
@@ -103,18 +131,20 @@ func attack(character):
 
 func flipHero():
 	is_looking_left = !is_looking_left;
-	scale.x = -scale.x
+	sprite.scale.x = -sprite.scale.x
+	hitBox.scale.x = -hitBox.scale.x
+	hurtBox.scale.x = -hurtBox.scale.x
 
 func move():
 	if Input.is_action_pressed("ui_left"):
 		if !is_looking_left:
 			flipHero()
-		movement.x = -speed
+		movement.x = -speed * speed_bonus
 		changeAnimation('MOVE')
 	elif Input.is_action_pressed("ui_right"):
 		if is_looking_left:
 			flipHero()
-		movement.x = speed
+		movement.x = speed * speed_bonus
 		changeAnimation('MOVE')
 	elif Input.is_action_pressed("ui_down"):
 		movement.x = 0
@@ -122,6 +152,17 @@ func move():
 	else:
 		movement.x = 0
 		changeAnimation('IDLE')
+
+	movement.y += 30
+	if !is_on_floor():
+		changeAnimation("JUMP" if movement.y < 0 else "FALL")
+	elif Input.is_action_just_pressed("Dash"):
+		start_dash()
+	
+	if Input.is_action_just_pressed("Jump") and is_on_floor():
+		movement.y = -660
+
+	movement = move_and_slide(movement, Vector2.UP)
 
 func _on_ready():
 	pass
@@ -152,7 +193,6 @@ func _on_process(delta):
 func _on_physics_process(delta):
 	if isAttacking() || isFainted(): return
 	move()
-	move_and_collide(movement * delta)
 
 func _ready():
 	_on_ready()
@@ -167,8 +207,9 @@ func _physics_process(delta):
 	_on_physics_process(delta)
 
 func _on_AnimationPlayer_animation_finished(anim_name):
-	if isAttacking():
+	if isAttacking() || anim_name == "DASH":
 		changeAnimation("IDLE")
 
 func _on_StaminaTimer_timeout():
 	consumeStamina(-stamina_regeneration)
+	#printt('stamina', stamina)
