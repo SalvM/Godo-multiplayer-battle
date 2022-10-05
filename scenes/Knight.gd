@@ -75,7 +75,7 @@ func _on_physics_process(delta):
 func _on_input(event):
 	if is_enemy:
 		return
-	.on_input(event)
+	._on_input(event)
 
 func _on_process(event):
 	if is_enemy:

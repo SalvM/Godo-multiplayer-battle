@@ -18,6 +18,10 @@ config/icon="res://icon.png"
 
 Server="*res://scenes/Server.tscn"
 
+[global]
+
+phys=false
+
 [gui]
 
 common/drop_mouse_on_gui_input_disabled=true
