@@ -54,3 +54,7 @@ collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="TestDamage"]
 shape = SubResource( 4 )
+
+[node name="Player" type="Node2D" parent="."]
+
+[node name="OtherPlayers" type="Node2D" parent="."]

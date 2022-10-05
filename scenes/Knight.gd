@@ -5,6 +5,8 @@ onready var staminaBar = $HUD/StaminaBar
 onready var dashBar = $HUD/DashBar
 onready var playerLabel = $HUD2/Label
 
+var player_state
+
 func _set_health(value):
 	var prev_health = health
 	health = clamp(value, 0, max_health)
@@ -37,6 +39,10 @@ func faint():
 	.faint()
 	$HurtBox/Collision.disabled = true
 
+func move_puppet(coordinates: Vector2):
+	position.x = coordinates.x
+	position.y = coordinates.y
+
 func _on_AnimationPlayer_animation_finished(anim):
 	._on_AnimationPlayer_animation_finished(anim)
 
@@ -47,12 +53,34 @@ func _on_DashTimer_timeout():
 	speed_bonus = 1.0
 	dash.stop()
 
+func send_player_state():
+	player_state = {"T": OS.get_system_time_msecs(), "P": get_global_position()}
+	Server.send_player_state(player_state)
+
 func _on_ready():
-	$StaminaTimer.start()
-	$DashRegenTimer.start()
 	hitBox.get_node("Collision").disabled = true
 	$HUD2/Label.text = fighter_name
-	# set_player_name()
+	if is_enemy:
+		set_physics_process(false)
+		return
+	$StaminaTimer.start()
+	$DashRegenTimer.start()
+
+func _on_physics_process(delta):
+	if is_enemy:
+		return
+	._on_physics_process(delta)
+	send_player_state()
+
+func _on_input(event):
+	if is_enemy:
+		return
+	.on_input(event)
+
+func _on_process(event):
+	if is_enemy:
+		return
+	._on_process(event)
 
 func _on_HurtBox_area_entered(area):
 	damage(10)

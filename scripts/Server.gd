@@ -1,7 +1,5 @@
 extends Node
 
-onready var Puppet = preload("res://scenes/Knight.tscn")
-
 var network = NetworkedMultiplayerENet.new()
 var ip = "127.0.0.1"
 var port = 1909
@@ -38,22 +36,15 @@ remote func fetch_user_join_room():
 	rpc_id(1, "fetch_user_join_room")
 	
 remote func user_load_battlefield(peer_id):
-	printt('user_load_battlefield', peer_id)
 	get_tree().change_scene("res://scenes/BattleField.tscn")
 
-remote func user_spawn_puppet(peer_id, x_coordinates, is_player_puppet):
-	var puppet_instance = Puppet.instance()
-	puppet_instance.set_name(str(peer_id))
-	puppet_instance.set_network_master(peer_id)
-	puppet_instance.fighter_name = "You" if  peer_id == get_tree().get_network_unique_id() else "#"+str(peer_id)
-	puppet_instance.position.x = x_coordinates
-	puppet_instance.position.y = 30
-	puppet_instance.scale.x = 2
-	puppet_instance.scale.y = 2
-	get_tree().get_root().get_node("BattleField").add_child(puppet_instance)
+func send_player_state(player_state):
+	rpc_unreliable_id(1, "receive_player_state", player_state)
 
-func fetch_battlefield_loaded():
-	rpc_id(1, "fetch_battlefield_loaded")
+remote func receive_world_state(world_state):
+	var battlefield_node = get_tree().get_root().get_node("BattleField")
+	if battlefield_node:
+		battlefield_node.update_world_state(world_state)
 
 func fetch_player_damage(requester_instance_id):
 	rpc_id(1, "fetch_player_damage", requester_instance_id)

@@ -32,6 +32,7 @@ var basic_attack_cost = 20
 var current_state = State.IDLE
 var is_looking_left = false
 var speed_bonus = 1.0
+var is_enemy = false
 
 # Combo
 export (float) var timeTillNextInput = 0.2
