@@ -54,7 +54,13 @@ func _on_DashTimer_timeout():
 	dash.stop()
 
 func send_player_state():
-	player_state = {"T": OS.get_system_time_msecs(), "P": get_global_position()}
+	player_state = {
+		"T": OS.get_system_time_msecs(),
+		"P": get_global_position(),
+		"S": current_state,
+		"L": is_looking_left,
+		#"B": [health, stamina, dashes] # bars
+	}
 	Server.send_player_state(player_state)
 
 func _on_ready():
@@ -83,7 +89,8 @@ func _on_process(event):
 	._on_process(event)
 
 func _on_HurtBox_area_entered(area):
-	damage(10)
+	# Check type of damage and the ID of the player who attacked
+	Server.fetch_player_damage()
 
 func _on_DashRegenTimer_timeout():
 	_set_dashes(dashes + 1)

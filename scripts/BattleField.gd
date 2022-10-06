@@ -36,30 +36,69 @@ We have an array of world_state(s) ordered from the older to the newest.
 The function will use only the first newest state (index 1), which will take
 the place of the older (index 0).
 This way you can use a lerp function to move the sprites smoothly.
+Extrapolation works when some packets are lost.
+In that case it will use the two previous states to do an extimated calculation about
+where all those entities gonna ends up if they keep moving in the same direction.
+As soon as a new package arrives, it'll fix it and the state will be back on track.
+This way the player doesn't experience the lag spike.
 """
-func handle_interpolation_buffer():
+func handle_interpolation_and_extrapolation():
 	var render_time = OS.get_system_time_msecs() - interpolation_offset
 	if world_state_buffer.size() > 1:
-		while world_state_buffer.size() > 2 and render_time > world_state_buffer[1]["T"]:
+		while world_state_buffer.size() > 2 and render_time > world_state_buffer[2]["T"]:
 			world_state_buffer.remove(0) # previously calculated, so it can be removed safely
-		var old_state = world_state_buffer[0]
-		var first_new_state = world_state_buffer[1]
-		var interpolation_factor = float(render_time - old_state["T"]) / float(first_new_state["T"] - old_state["T"])
-		for player_id in first_new_state.keys():
-			if str(player_id) == "T":
-				continue
-			if player_id == player_unique_id: # it will spawn the player's puppet if needed
-				if !player_has_spawned:
-					player_has_spawned = true
-					spawn_puppet(player_id, first_new_state[player_id]["P"])
-				continue
-			if not old_state.has(player_id): # the player is no longer connected
-				continue
-			if get_node("OtherPlayers").has_node(str(player_id)):
-				var new_position = lerp(old_state[player_id]["P"], first_new_state[player_id]["P"], interpolation_factor)
-				get_node("OtherPlayers/" + str(player_id)).move_puppet(new_position)
-			else:
-				spawn_puppet(player_id, first_new_state[player_id]["P"])
+		if world_state_buffer.size() > 2: # we have a future state, we will trigger interpolation
+			var old_state = world_state_buffer[1]
+			var first_future_state = world_state_buffer[2]
+			var interpolation_factor = float(render_time - old_state["T"]) / float(first_future_state["T"] - old_state["T"])
+			for player_id in first_future_state.keys():
+				if str(player_id) == "T":
+					continue
+				if player_id == player_unique_id: # it will spawn the player's puppet if needed
+					if !player_has_spawned:
+						player_has_spawned = true
+						spawn_puppet(player_id, first_future_state[player_id]["P"])
+					continue
+				if not old_state.has(player_id): # the player is no longer connected
+					continue
+				if get_node("OtherPlayers").has_node(str(player_id)):
+					var new_position = lerp(old_state[player_id]["P"], first_future_state[player_id]["P"], interpolation_factor)
+					var player_puppet = get_node("OtherPlayers/" + str(player_id))
+					var new_animation = player_puppet.State.keys()[first_future_state[player_id]["S"]]
+					var is_looking_left = first_future_state[player_id]["L"]
+					var puppet_bars = first_future_state[player_id]["B"]
+					player_puppet.move_puppet(new_position)
+					player_puppet.changeAnimation(new_animation)
+					player_puppet._set_health(puppet_bars[0])
+					if is_looking_left != player_puppet.is_looking_left:
+						player_puppet.flipHero()
+				else:
+					spawn_puppet(player_id, first_future_state[player_id]["P"])
+		elif render_time > world_state_buffer[1]["T"]: # otherwise we need extrapolation
+			var old_state = world_state_buffer[0]
+			var first_future_state = world_state_buffer[1]
+			# we deduct 1.00 to not include the time that has passed between both past world states
+			# as that time has already been accounted for
+			var extrapolation_factor = float(render_time - old_state["T"]) / float(first_future_state["T"] - old_state["T"]) - 1.00
+			for player_id in first_future_state.keys():
+				if str(player_id) == "T":
+					continue
+				if player_id == player_unique_id: # it will spawn the player's puppet if needed
+					continue
+				if not old_state.has(player_id): # the player is no longer connected
+					continue
+				if get_node("OtherPlayers").has_node(str(player_id)):
+					var position_delta = first_future_state[player_id]["P"] - old_state[player_id]["P"]
+					var new_position = first_future_state[player_id]["P"] + position_delta * extrapolation_factor
+					var is_looking_left = first_future_state[player_id]["L"]
+					var player_puppet = get_node("OtherPlayers/" + str(player_id))
+					var new_animation = player_puppet.State.keys()[first_future_state[player_id]["S"]]
+					var puppet_bars = first_future_state[player_id]["B"]
+					player_puppet.move_puppet(new_position)
+					player_puppet.changeAnimation(new_animation)
+					if is_looking_left != player_puppet.is_looking_left:
+						player_puppet.flipHero()
+					player_puppet._set_health(puppet_bars[0])
 
 func update_world_state(world_state):
 	# Buffer
@@ -74,4 +113,4 @@ func _ready():
 	player_unique_id = get_tree().get_network_unique_id()
 
 func _physics_process(delta):
-	handle_interpolation_buffer()
+	handle_interpolation_and_extrapolation()
