@@ -3,11 +3,6 @@ extends KinematicBody2D
 This is a base class for all the Fighter in a battle scenario.
 """
 
-# Signals
-signal health_changed(new_health)
-signal stamina_changed(new_stamina)
-signal fighter_hurt(damage, fighter_name)
-
 # Constants
 enum State {
 	IDLE, MOVE, JUMP, FALL, HURT, QUICK_ATTACK,
@@ -21,11 +16,11 @@ var speed = 200
 # Statistics
 export (String) var fighter_name = ""
 export (int) var max_health = 100
-export (int) var health = 100 setget _set_health
+export (int) var health = 100 setget set_health
 export (int) var max_stamina = 80
-export (int) var stamina = 80 setget _set_stamina
+export (int) var stamina = 80 setget set_stamina
 export (int) var max_dashes = 3
-export (int) var dashes = 3 setget _set_dashes
+export (int) var dashes = 3 setget set_dashes
 
 var stamina_regeneration = 8
 var basic_attack_cost = 20
@@ -57,7 +52,7 @@ func start_dash():
 		return
 	if dashes < 1:
 		return
-	_set_dashes(dashes - 1)
+	set_dashes(dashes - 1)
 	dash.wait_time = dash_duration
 	dash.start()
 	speed_bonus = 6
@@ -66,49 +61,38 @@ func start_dash():
 func is_dashing():
 	return !dash.is_stopped()
 
-# Getters and Setters
-func health_in_percentage(value):
-	return 100 / (max_health / value)
+func health_in_percentage(value) -> float:
+	return float(value) / max_health * 100
 
-func stamina_in_percentage(value):
-	return 100 / (max_stamina / value)
+func stamina_in_percentage(value) -> float:
+	return float(value) / max_stamina * 100
 
 func faint():
 	collision.disabled = true
 	changeAnimation("FAINT")
 	yield(animationPlayer, "animation_finished")
 
-func damage(amount):
-	_set_health(health - amount)
-
 func consumeStamina(amount):
-	_set_stamina(stamina - amount)
+	set_stamina(stamina - amount)
 
-func _set_health(value):
-	var prev_health = health;
-	health = clamp(value, 0, max_health);
+func set_health(value):
+	health = clamp(value, 0, max_health)
 	if health == 0:
-		emit_signal("health_changed", 0)
 		faint()
-	elif health != prev_health:
-		emit_signal("health_changed", health_in_percentage(health))
 
-func _set_stamina(value):
-	var prev_stamina = stamina;
-	stamina = clamp(value, 0, max_stamina);
-	if stamina == 0:
-		emit_signal("stamina_changed", 0)
-	elif stamina != prev_stamina:
-		emit_signal("stamina_changed", stamina_in_percentage(stamina))
+func set_stamina(value):
+	stamina = clamp(value, 0, max_stamina)
 
-func _set_dashes(value):
-	var prev_dashes = dashes;
+func set_dashes(value):
 	dashes = clamp(value, 0, max_dashes)
-	#printt('dashes', dashes)
 
 func changeAnimation(type):
 	if not animationPlayer.has_animation(type):
 		return
+	if animationPlayer.current_animation == type:
+		return
+	if animationPlayer.current_animation == "HURT":
+		yield(animationPlayer, "animation_finished")
 	animationPlayer.play(type)
 	current_state = State[type.to_upper()]
 

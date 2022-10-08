@@ -66,14 +66,14 @@ remote func return_latency(client_time):
 		var mid_port = latency_array[4]
 		for i in range(latency_array.size() - 1, -1, -1):
 			if latency_array[i] > 2 * mid_port and latency_array[i] > 20: # this latency is a spike
-				latency_array.remove() # we don't need it for calculation
+				latency_array.remove(i) # we don't need it for calculation
 			else:
 				total_latency += latency_array[i]
 		var average_latency = total_latency / latency_array.size()
 		delta_latency = average_latency - latency
 		latency = average_latency
-		print("New latency ", latency)
-		print("Delta latency ", delta_latency)
+		#print("New latency ", latency)
+		#print("Delta latency ", delta_latency)
 		latency_array.clear()
 
 func fetch_server_time():
