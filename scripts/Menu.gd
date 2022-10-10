@@ -44,4 +44,4 @@ func _on_ExitBtn_pressed():
 	clear_players_label()
 
 func _on_JoinRoomBtn_pressed():
-	Server.fetch_user_join_room()
+	Server.fetch_user_join_room(0)

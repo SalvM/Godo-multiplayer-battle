@@ -1,8 +1,9 @@
 extends Node
 
 var network = NetworkedMultiplayerENet.new()
-var ip = "127.0.0.1"
-var port = 1909
+var server_address = "127.0.0.1"
+# var server_address = "a988-62-98-80-82.ngrok.io"
+var port = 4050
 var match_room = {
 	"status": "waiting",
 	"players": {}
@@ -14,16 +15,16 @@ var latency_array = []
 var latency = 0			# latency in ms
 var delta_latency = 0
 
+var logged_room_id = -1
+
 signal log_status(new_status)
 signal refresh_room_status(new_status)
 
 func connect_to_server():
-	var connection_server = ip + ":" + str(port)
-	emit_signal("log_status", "Connecting to " + connection_server + " ...")
-	network.create_client(ip, port)
+	emit_signal("log_status", "Connecting to " + server_address + " ...")
+	network.create_client(server_address, port)
 	get_tree().set_network_peer(network)
 	printt("Connected at port", port)
-	emit_signal("log_status", "Successfully connected!")
 
 	network.connect("peer_connected", self, "_on_peer_connected")
 	network.connect("peer_disconnected", self, "_on_peer_disconnected")
@@ -33,27 +34,35 @@ func disconnect_from_server():
 	get_tree().network_peer = null
 	emit_signal("log_status", "Disconnected from the server")	
 
-remote func return_room_status(room_status):
-	printt("return_room_status", room_status)
-	match_room = room_status
+remote func return_match_room_status(room_status):
+	printt("return_match_room_status", room_status)
+	if get_tree().get_network_unique_id() in room_status.players:
+		logged_room_id = room_status.id
+		match_room = room_status
 	emit_signal("refresh_room_status", room_status)
 
-remote func fetch_user_join_room():
-	rpc_id(1, "fetch_user_join_room")
+func fetch_user_join_room(room_id):
+	rpc_id(1, "fetch_user_join_room", room_id)
 	
-remote func user_load_battlefield(peer_id):
+remote func user_load_battlefield(room_id):
+	logged_room_id = int(room_id)
 	get_tree().change_scene("res://scenes/BattleField.tscn")
 
 func send_player_state(player_state):
-	rpc_unreliable_id(1, "receive_player_state", player_state)
+	rpc_unreliable_id(1, "receive_player_state", player_state, logged_room_id)
 
-remote func receive_world_state(world_state):
+remote func receive_room_state(room_state):
 	var battlefield_node = get_tree().get_root().get_node("BattleField")
 	if battlefield_node:
-		battlefield_node.update_world_state(world_state)
+		battlefield_node.update_world_state(room_state)
+
+# when the player is in the lobby, not in a match
+remote func return_match_rooms(match_rooms):
+	for match_room in match_rooms:
+		return_match_room_status(match_room)
 
 func fetch_player_damage():
-	rpc_id(1, "fetch_player_damage")
+	rpc_id(1, "fetch_player_damage", logged_room_id)
 
 func determine_latency():
 	rpc_id(1, "determine_latency", OS.get_system_time_msecs())

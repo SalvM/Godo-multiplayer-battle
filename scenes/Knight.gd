@@ -66,7 +66,7 @@ func _on_DashTimer_timeout():
 
 func send_player_state():
 	player_state = {
-		"T": OS.get_system_time_msecs(),
+		"T": Server.client_clock,
 		"P": get_global_position(),
 		"S": current_state,
 		"L": is_looking_left,

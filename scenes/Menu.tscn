@@ -56,6 +56,7 @@ rect_min_size = Vector2( 512, 40 )
 text = "Join"
 
 [node name="RoomPopup" type="Popup" parent="CenterContainer"]
+visible = true
 margin_left = 212.0
 margin_top = 100.0
 margin_right = 812.0
