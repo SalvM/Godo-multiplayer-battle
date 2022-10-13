@@ -26,20 +26,17 @@ func expand():
 	self.rect_min_size.y = 100
 	center.rect_size.x = 200
 	center.rect_size.y = 72
-	# center.rect_position.y = 0
+	body.rect_position.y = 28
 	# center.margin_top = 28
 	body.visible = true
 	JoinRoomBtn.visible = false
 	ExitRoomBtn.visible = true
 
 func join():
-	expand()
 	Server.fetch_user_join_room(self.name)
-	pass
 
 func exit():
-	close()
-	pass
+	Server.fetch_user_leave_room(self.name)
 
 func clear_players_label():
 	for labels in players.get_children():
@@ -61,13 +58,16 @@ func refresh_selector(room_status):
 			new_label.text += " (You)"
 		new_label.visible = true
 		players.add_child(new_label)
+	if get_tree().get_network_unique_id() in room_status.players:
+		expand()
+	else:
+		close()
 
 func _ready():
-	expand()
 	close()
 
 func _on_JoinRoomBtn_pressed():
 	join()
 
 func _on_ExitRoomBtn_pressed():
-	close()
+	exit()

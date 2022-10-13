@@ -78,20 +78,21 @@ func _connect_after_timeout(timeout: float) -> void:
 	connect_to_server_with_websocket()
 
 func disconnect_from_server():
-	network.close_connection()
+	network.disconnect_from_host(1000, "Closed by the client")
 	get_tree().network_peer = null
 	emit_signal("log_status", "Disconnected from the server")	
 
 remote func return_match_room_status(room_status):
-	# printt("return_match_room_status", room_status)
 	if get_tree().get_network_unique_id() in room_status.players:
 		logged_room_id = room_status.id
 		match_room = room_status
-	emit_signal("refresh_room_status", room_status)
 
 func fetch_user_join_room(room_id):
 	rpc_id(1, "fetch_user_join_room", room_id)
-	
+
+func fetch_user_leave_room(room_id):
+	rpc_id(1, "fetch_user_leave_room", room_id)
+
 remote func user_load_battlefield(room_id):
 	logged_room_id = int(room_id)
 	get_tree().change_scene("res://scenes/BattleField.tscn")

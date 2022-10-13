@@ -4,6 +4,10 @@ onready var playerLabel = $HUD2/Label
 onready var healthBar = $HUD/HealthBar
 onready var staminaBar = $HUD/StaminaBar
 onready var dashBar = $HUD/DashBar
+onready var SFX = $SFX
+
+const swoosh = preload("res://assets/swoosh_3.mp3")
+const plate_armor = preload("res://assets/plate_armor.mp3")
 
 var player_state
 
@@ -73,6 +77,16 @@ func send_player_state():
 		#"B": [health, stamina, dashes] # bars
 	}
 	Server.send_player_state(player_state)
+
+func play_sound(_sound):
+	SFX.stream = _sound
+	SFX.play()
+
+func play_swoosh():
+	play_sound(swoosh)
+	
+func play_plate_armor():
+	play_sound(plate_armor)
 
 func _on_ready():
 	hitBox.get_node("Collision").disabled = true
