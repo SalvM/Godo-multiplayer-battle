@@ -1,8 +1,8 @@
 extends Control
 
 onready var RoomLabel = $TitleContainer/RoomLabel
-onready var JoinRoomBtn = $JoinRoomBtn
-onready var ExitRoomBtn = $ExitRoomBtn
+onready var JoinRoomBtn = $ButtonContainer/JoinRoomBtn
+onready var ExitRoomBtn = $ButtonContainer/ExitRoomBtn
 onready var body = $BodyContainer
 onready var center = $BodyContainer/Center
 onready var players = $BodyContainer/Center/Players
@@ -14,22 +14,31 @@ func disable_join_button():
 	JoinRoomBtn.disabled = true
 
 func close():
-	body.visible = false
 	self.rect_size.y = 28
+	self.rect_min_size.y = 28
+	center.rect_size.y = 0
+	JoinRoomBtn.visible = true
+	ExitRoomBtn.visible = false
+	body.visible = false
 
 func expand():
-	self.rect_size.y = 200
+	self.rect_size.y = 100
+	self.rect_min_size.y = 100
 	center.rect_size.x = 200
 	center.rect_size.y = 72
-	center.rect_position.y = 0
-	center.margin_top = 28
+	# center.rect_position.y = 0
+	# center.margin_top = 28
 	body.visible = true
-	
+	JoinRoomBtn.visible = false
+	ExitRoomBtn.visible = true
 
 func join():
+	expand()
+	Server.fetch_user_join_room(self.name)
 	pass
 
 func exit():
+	close()
 	pass
 
 func clear_players_label():
@@ -38,9 +47,12 @@ func clear_players_label():
 			labels.queue_free()
 
 func refresh_selector(room_status):
-	RoomLabel.text = "Room #" + room_status.id + " (" + room_status.players.size() + "/" + max_players + ")"
+	var room_id = int(room_status.id) + 1
+	var connected_players = room_status.players.size()
+	RoomLabel.text = "Room #" + str(room_id) + " (" + str(connected_players) + "/" + str(max_players) + ")"
 	if room_status.status != "WAITING":
 		disable_join_button()
+	clear_players_label()
 	for player_id in room_status.players:
 		var new_label = youLabel.duplicate()
 		new_label.set_name(str(player_id))
@@ -52,4 +64,10 @@ func refresh_selector(room_status):
 
 func _ready():
 	expand()
+	close()
+
+func _on_JoinRoomBtn_pressed():
+	join()
+
+func _on_ExitRoomBtn_pressed():
 	close()

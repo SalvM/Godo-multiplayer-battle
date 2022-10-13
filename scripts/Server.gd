@@ -1,9 +1,18 @@
 extends Node
 
-var network = NetworkedMultiplayerENet.new()
-var server_address = "127.0.0.1"
-# var server_address = "a988-62-98-80-82.ngrok.io"
-var port = 4050
+const LOCALHOST = "127.0.0.1"
+const HOST = "2.tcp.eu.ngrok.io"
+const PORT: int = 17282
+const RECONNECT_TIMEOUT: float = 3.0
+const is_debug = false
+var network 
+
+# Used to TCP connections
+#const Client = preload("res://TCP.gd")
+#var _client: Client = Client.new()
+
+var server_address = ""
+
 var match_room = {
 	"status": "waiting",
 	"players": {}
@@ -18,16 +27,55 @@ var delta_latency = 0
 var logged_room_id = -1
 
 signal log_status(new_status)
-signal refresh_room_status(new_status)
+signal refresh_match_rooms(new_status)
+
+func get_connection_status_text(status):
+	var connection_result = ""
+	match status:
+		0:
+			connection_result = "The ongoing connection disconnected"
+		1:
+			connection_result = "A connection attempt is ongoing."
+		2:
+			connection_result = "The connection attempt succeeded."
+	return connection_result
 
 func connect_to_server():
+	server_address = LOCALHOST if is_debug else HOST
 	emit_signal("log_status", "Connecting to " + server_address + " ...")
-	network.create_client(server_address, port)
-	get_tree().set_network_peer(network)
-	printt("Connected at port", port)
-
+	
+	# this signals will handle everything.
+	network = NetworkedMultiplayerENet.new()
+	network.connect("connection_succeeded", self, "_on_connection_succeded")
+	network.connect("connection_failed", self, "_on_connection_failed")
+	network.connect("server_disconnected", self, "_on_server_disconnected")
 	network.connect("peer_connected", self, "_on_peer_connected")
 	network.connect("peer_disconnected", self, "_on_peer_disconnected")
+	network.create_client(server_address, PORT)
+	emit_signal("log_status", get_connection_status_text(network.get_connection_status()))
+
+func connect_to_server_with_websocket():
+	server_address = LOCALHOST if is_debug else HOST
+	server_address = server_address + ":" + str(PORT)
+	network = WebSocketClient.new()
+	network.connect("connection_succeeded", self, "_on_connection_succeded")
+	network.connect("connection_failed", self, "_on_connection_failed")
+	network.connect("server_disconnected", self, "_on_server_disconnected")
+	network.connect("peer_connected", self, "_on_peer_connected")
+	network.connect("peer_disconnected", self, "_on_peer_disconnected")
+	
+	emit_signal("log_status", "Connecting to " + server_address + " ...")
+	var err = network.connect_to_url(server_address, PoolStringArray(), true)
+	if err != OK:
+		print("Unable to connect %s", server_address)
+		emit_signal("log_status", "Unable to connect to the server " + server_address)
+		return
+	get_tree().network_peer = network
+	set_process(true)
+
+func _connect_after_timeout(timeout: float) -> void:
+	yield(get_tree().create_timer(timeout), "timeout") # Delay for timeout
+	connect_to_server_with_websocket()
 
 func disconnect_from_server():
 	network.close_connection()
@@ -35,7 +83,7 @@ func disconnect_from_server():
 	emit_signal("log_status", "Disconnected from the server")	
 
 remote func return_match_room_status(room_status):
-	printt("return_match_room_status", room_status)
+	# printt("return_match_room_status", room_status)
 	if get_tree().get_network_unique_id() in room_status.players:
 		logged_room_id = room_status.id
 		match_room = room_status
@@ -58,6 +106,7 @@ remote func receive_room_state(room_state):
 
 # when the player is in the lobby, not in a match
 remote func return_match_rooms(match_rooms):
+	emit_signal("refresh_match_rooms", match_rooms)
 	for match_room in match_rooms:
 		return_match_room_status(match_room)
 
@@ -100,6 +149,10 @@ remote func return_server_time(server_time, client_time): # in ms
 func _ready():
 	pass
 
+func _process(delta):
+	if network:
+		network.poll()
+
 func _physics_process(delta): #0.01667
 	client_clock += int(delta * 1000) + delta_latency
 	delta_latency = 0
@@ -107,6 +160,16 @@ func _physics_process(delta): #0.01667
 	if decimal_corrector >= 1.00:
 		client_clock += 1
 		decimal_corrector -= 1.00
+
+func _on_server_disconnected():
+	emit_signal("log_status", get_connection_status_text(0))
+
+func _on_connection_failed():
+	emit_signal("log_status", get_connection_status_text(0))
+
+func _on_connection_succeded():
+	emit_signal("log_status", get_connection_status_text(2))
+	get_tree().set_network_peer(network)
 
 func _on_peer_connected(peer_id):
 	if peer_id == 1:

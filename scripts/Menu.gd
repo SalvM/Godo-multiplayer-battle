@@ -4,8 +4,10 @@ signal log_status(new_status)
 
 onready var statusLabel = $Status
 onready var roomPopup = $CenterContainer/RoomPopup
-onready var players = $CenterContainer/RoomPopup/VBoxContainer/Players
-onready var youLabel = $CenterContainer/RoomPopup/VBoxContainer/Players/You
+onready var rooms = $CenterContainer/RoomPopup/Rooms
+onready var players = $CenterContainer/RoomPopup/Rooms/Players
+onready var youLabel = $CenterContainer/RoomPopup/Rooms/Players/You
+onready var RoomSelector = preload("res://scenes/RoomSelector.tscn")
 
 func clear_players_label():
 	for labels in players.get_children():
@@ -14,28 +16,23 @@ func clear_players_label():
 
 func _ready():
 	Server.connect("log_status", self, "_on_new_log_status")
-	Server.connect("refresh_room_status", self, "_on_room_status_refresh")
+	Server.connect("refresh_match_rooms", self, "_on_refresh_match_rooms")
 
 func _on_new_log_status(new_status: String):
 	statusLabel.text = new_status
 
-func _on_room_status_refresh(new_status):
-	var new_players = new_status.players
-	youLabel.visible = false
-	
-	clear_players_label()
-	
-	for player_id in new_players:
-		var new_label = youLabel.duplicate()
-		new_label.set_name(str(player_id))
-		new_label.text = "#" + str(player_id)
-		if player_id == get_tree().get_network_unique_id():
-			new_label.text += " (You)"
-		new_label.visible = true
-		players.add_child(new_label)
-	
+func _on_refresh_match_rooms(_match_rooms):
+	for match_room in _match_rooms:
+		if rooms.has_node(match_room.id):
+			rooms.get_node(match_room.id).refresh_selector(match_room)
+		else:
+			var new_room = RoomSelector.instance()
+			new_room.set_name(match_room.id)
+			rooms.add_child(new_room)
+			new_room.refresh_selector(match_room)
+
 func _on_JoinBtn_pressed():
-	Server.connect_to_server()
+	Server.connect_to_server_with_websocket()
 	roomPopup.show()
 
 func _on_ExitBtn_pressed():
