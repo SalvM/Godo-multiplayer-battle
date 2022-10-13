@@ -68,8 +68,8 @@ func stamina_in_percentage(value) -> float:
 	return float(value) / max_stamina * 100
 
 func faint():
-	collision.disabled = true
 	changeAnimation("FAINT")
+	#collision.disabled = true
 	yield(animationPlayer, "animation_finished")
 
 func consumeStamina(amount):
@@ -91,7 +91,7 @@ func changeAnimation(type):
 		return
 	if animationPlayer.current_animation == type:
 		return
-	if animationPlayer.current_animation == "HURT":
+	if animationPlayer.current_animation in ["HURT"]:
 		yield(animationPlayer, "animation_finished")
 	animationPlayer.play(type)
 	current_state = State[type.to_upper()]

@@ -39,6 +39,8 @@ func update_puppet(player_id, player_puppet, first_future_state, new_position):
 	var new_animation = player_puppet.State.keys()[first_future_state[player_id]["S"]]
 	var is_looking_left = first_future_state[player_id]["L"]
 	var puppet_bars = first_future_state[player_id]["B"]
+	if player_puppet.is_dead():
+		return
 	update_puppet_bars(player_puppet, puppet_bars)
 	player_puppet.move_puppet(new_position)
 	player_puppet.changeAnimation(new_animation)

@@ -17,10 +17,9 @@ func set_health(value):
 	var prev_health = health
 	health = clamp(value, 0, max_health)
 	var new_health_percentage = health_in_percentage(health) if health > 0 else 0
+	healthBar.set_value(new_health_percentage)
 	if new_health_percentage == 0:
 		faint()
-		return
-	healthBar.set_value(new_health_percentage)
 
 func set_stamina(value):
 	if value == stamina:
@@ -42,15 +41,19 @@ func set_player_name():
 func consumeStamina(amount):
 	set_stamina(stamina - amount)
 
+func is_dead():
+	return health == 0
+
 func faint():
-	.faint()
+	#.faint()
 	hurtBox.get_node("Collision").set_deferred("disabled", true)
 	hitBox.get_node("Collision").set_deferred("disabled", true)
 	$HUD.hide()
 	$HUD2.hide()
 	if is_enemy:
 		return
-	send_player_state()
+	.faint()
+	#send_player_state()
 
 func move_puppet(coordinates: Vector2):
 	position.x = coordinates.x
@@ -98,18 +101,18 @@ func _on_ready():
 	$DashRegenTimer.start()
 
 func _on_physics_process(delta):
-	if is_enemy:
+	if is_enemy || is_dead():
 		return
 	._on_physics_process(delta)
 	send_player_state()
 
 func _on_input(event):
-	if is_enemy:
+	if is_enemy || is_dead():
 		return
 	._on_input(event)
 
 func _on_process(event):
-	if is_enemy:
+	if is_enemy || is_dead():
 		return
 	._on_process(event)
 
